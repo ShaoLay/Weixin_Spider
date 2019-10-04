@@ -113,4 +113,17 @@ class Spider(object):
         except requests.ConnectionError:
             return None
 
+    def error(self, weixin_request):
+        """
+        错误处理
+        :param weixin_request:
+        :return:
+        """
+        weixin_request.fail_time = weixin_request.fail_time + 1
+        print('Request Failed', weixin_request.fail_time, '时间:', weixin_request.url)
+        if weixin_request.fail_time < MAX_FAILED_TIME:
+            self.queue.add(weixin_request)
+
+
+
 
