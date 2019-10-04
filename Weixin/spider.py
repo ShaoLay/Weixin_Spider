@@ -3,9 +3,11 @@
 # author: Hamdi
 from urllib.parse import urlencode
 
-from requests import Session
+import requests
+from requests import Session, ReadTimeout
 from pyquery import PyQuery as pq
 
+from config import *
 from redis_db import RedisQueue
 from request import WeixinRequest
 
@@ -75,5 +77,40 @@ class Spider(object):
             'wechat': doc('#js_profile_qrcode > div > p:nth-child(3) > span').text()
         }
         yield data
+
+    def request(self, weixin_request):
+        """
+        执行请求
+        :param weixin_request: 请求
+        :return: 响应
+        """
+        try:
+            if weixin_request.need_proxy:
+                proxy = self.get_proxy()
+                if proxy:
+                    proxies = {
+                        'http': 'http://' + proxy,
+                        'https': 'https://' + proxy
+                    }
+                    return self.session.send(weixin_request.prepare(),
+                                             timeout=weixin_request.timeout, allow_redirects=False, proxies=proxies)
+            return self.session.send(weixin_request.prepare(), timeout=weixin_request.timeout, allow_redirects=False)
+        except (ConnectionError, ReadTimeout) as e:
+            print(e.args)
+            return False
+
+    def get_proxy(self):
+        """
+        从代理池获取代理
+        :return:
+        """
+        try:
+            response = requests.get(PROXY_POOL_URL)
+            if response.status_code == 200:
+                print('获取代理中:', response.text)
+                return response.text
+            return None
+        except requests.ConnectionError:
+            return None
 
 
