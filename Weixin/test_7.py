@@ -7,8 +7,9 @@ from pyquery import PyQuery as pq
 from urllib.parse import urlencode,quote
 import uuid
 import time
-from lxml import etree
 import re
+
+from config import *
 
 
 key ='亚马逊大火'
@@ -24,7 +25,6 @@ Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/a
 Accept-Encoding: gzip, deflate, br
 Accept-Language: zh-CN,zh;q=0.9
 '''
-
 
 def headers_to_dict(headers_str):
     '''
@@ -59,7 +59,6 @@ uphint	1
 bottomhint	1
 page	1
 exp_id	null_0-null_1-null_2-null_3-null_4-null_5-null_6-null_7-null_8-null_9
-time	20914
 '''
 
 def str_to_dict(a_str):
@@ -91,7 +90,7 @@ def get_suva(sunid):
     b_data['uuid'] = uuid.uuid1()
     b_data['uigs_t'] = str(int(round(time.time() * 1000)))
     url_link = 'https://pb.sogou.com/pv.gif?' + urlencode(b_data)
-    res = requests.get(url_link)
+    res = requests.get(url_link, )
     cookie_s = res.headers['Set-Cookie'].split(',')
     cookie_list_s = []
     for i in cookie_s:
@@ -104,10 +103,37 @@ def get_suva(sunid):
     headers['Cookie'] = cookie_list_s[0].split(';')[0]
 
 
+def get_proxy():
+    """
+    从代理池获取代理
+    :return:
+    """
+    try:
+        response = requests.get(PROXY_POOL_URL)
+        if response.status_code == 200:
+            print('获取代理：', response.text)
+            return response.text
+        return None
+    except requests.ConnectionError:
+        return None
+
+
+
+
+
 def get_first_parse(url):
     #给headers中添加Referer参数；
     headers['Referer'] = url_list
-    res =requests.get(url,headers=headers)
+
+    proxy = get_proxy()
+
+    proxies = {
+        'http://': proxy,
+        'https://': proxy,
+    }
+
+
+    res =requests.get(url,headers=headers, proxies=proxies)
     print(res.text)
     cookies =res.headers['Set-Cookie'].split(';')
     cookie_list_long =[]
@@ -120,7 +146,6 @@ def get_first_parse(url):
                 cookie_list2.append(set)
     sunid = cookie_list2[0].split(';')[0]
     get_suva(sunid)
-    print('已经执行完get_suva')
     #构造动态Cookies
     headers['Cookie'] = headers['Cookie'] +';' + ';'.join(cookie_list2)
     url_list11  = pq(res.text)('.news-list li').items()
@@ -138,6 +163,7 @@ def get_first_parse(url):
         second_url =requests.get(a_url,headers=headers).text
         #  获取真实url
         url_text =re.findall("\'(\S+?)\';", second_url, re.S)
+        print(url_text)
         best_url =''.join(url_text)
         last_text =requests.get(url = str(best_url.replace("@", ""))).text
         print(pq(last_text)('#activity-name').text())
