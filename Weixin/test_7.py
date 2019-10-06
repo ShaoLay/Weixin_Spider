@@ -12,8 +12,9 @@ import re
 from config import *
 
 
-key ='亚马逊大火'
+key ='王小波'
 url_list = 'https://weixin.sogou.com/weixin?type=2&query={}'.format(quote(key))
+# url_list = 'http://www.baidu.com'
 
 
 headers_str='''
@@ -48,7 +49,7 @@ s_from	input
 sourceid	
 type	weixin_search_pc
 uigs_cookie	SUID,sct
-query	亚马逊大火
+query	王小波
 weixintype	2
 exp_status	-1
 exp_id_list	0_0
@@ -90,7 +91,10 @@ def get_suva(sunid):
     b_data['uuid'] = uuid.uuid1()
     b_data['uigs_t'] = str(int(round(time.time() * 1000)))
     url_link = 'https://pb.sogou.com/pv.gif?' + urlencode(b_data)
-    res = requests.get(url_link, )
+
+
+
+    res = requests.get(url_link)
     cookie_s = res.headers['Set-Cookie'].split(',')
     cookie_list_s = []
     for i in cookie_s:
