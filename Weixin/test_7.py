@@ -138,8 +138,8 @@ def get_first_parse(url):
 
 
     res =requests.get(url,headers=headers, proxies=proxies)
-    print(res.text)
-    cookies =res.headers['Set-Cookie'].split(';')
+    print(res.headers)
+    cookies = res.headers['Set-Cookie'].split(';')
     cookie_list_long =[]
     cookie_list2 =[]
     for cookie in cookies:
@@ -157,6 +157,7 @@ def get_first_parse(url):
     for i in url_list11:
         #提取href属性标签
         url_list12 = pq(i('.img-box a').attr('href'))
+        print(url_list12)
         url_list12 =str(url_list12).replace('<p>','').replace('</p>','').replace('amp;','')
         print(url_list12)
         #构造参数k与h;
@@ -168,11 +169,20 @@ def get_first_parse(url):
         #  获取真实url
         url_text =re.findall("\'(\S+?)\';", second_url, re.S)
         print(url_text)
+
+        true_link = ''
+        for result in url_text:
+            true_link += result
+        print('我是真实的url:', true_link)
+
+
         best_url =''.join(url_text)
         last_text =requests.get(url = str(best_url.replace("@", ""))).text
         print(pq(last_text)('#activity-name').text())
         print(pq(last_text)('#js_content > p').text())
         print(pq(last_text)('#js_name').text())
         print(pq(last_text)('#meta_content > span.rich_media_meta.rich_media_meta_text').text())
+
+
 
 get_first_parse(url_list)
